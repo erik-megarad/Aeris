@@ -1,6 +1,6 @@
-from fastapi import FastAPI
 from ariadne import QueryType, make_executable_schema
 from ariadne.asgi import GraphQL
+from fastapi import FastAPI
 
 # Define GraphQL schema
 type_defs = """
