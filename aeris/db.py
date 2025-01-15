@@ -1,6 +1,6 @@
 import os
 
-import asyncpg
+from asyncpg import Pool, create_pool
 from bcrypt import gensalt, hashpw
 
 from aeris.env import env
@@ -11,7 +11,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 
 # Create a connection pool globally
-_pool = None
+_pool: Pool | None = None
 
 
 async def init_db_pool():
@@ -20,7 +20,7 @@ async def init_db_pool():
     """
     global _pool
     if _pool is None:
-        _pool = await asyncpg.create_pool(DATABASE_URL)
+        _pool = await create_pool(DATABASE_URL)
 
 
 async def close_db_pool():
@@ -62,7 +62,7 @@ async def drop_db():
         await conn.execute("DROP TABLE IF EXISTS task_tools")
         await conn.execute("DROP TABLE IF EXISTS tools")
         await conn.execute("DROP TABLE IF EXISTS tasks")
-        await conn.execute("DROP TABLE IF EXISTS project")
+        await conn.execute("DROP TABLE IF EXISTS projects")
 
 
 async def init_db():
@@ -71,7 +71,7 @@ async def init_db():
         await conn.execute("CREATE EXTENSION IF NOT EXISTS vector;")
 
         await conn.execute("""
-            CREATE TABLE IF NOT EXISTS project (
+            CREATE TABLE IF NOT EXISTS projects (
                 id SERIAL PRIMARY KEY,
                 uuid UUID DEFAULT gen_random_uuid(),
                 name TEXT NOT NULL, -- User-defined name of the project
@@ -84,7 +84,7 @@ async def init_db():
             CREATE TABLE IF NOT EXISTS tasks (
                 id SERIAL PRIMARY KEY,
                 uuid UUID DEFAULT gen_random_uuid(),
-                project_id INT NOT NULL REFERENCES project(id) ON DELETE CASCADE, -- Links task to project
+                project_id INT NOT NULL REFERENCES projects(id) ON DELETE CASCADE, -- Links task to project
                 name TEXT NOT NULL, -- User-defined name of the task
                 input TEXT NOT NULL, -- Task input
                 result TEXT, -- Final output of the task
@@ -117,7 +117,7 @@ async def init_db():
         await conn.execute("""
             CREATE TABLE user_projects (
                 user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- Links user to project
-                project_id INT NOT NULL REFERENCES project(id) ON DELETE CASCADE, -- Links user to project
+                project_id INT NOT NULL REFERENCES projects(id) ON DELETE CASCADE, -- Links user to project
                 PRIMARY KEY (user_id, project_id)
             );
         """)
@@ -167,7 +167,7 @@ async def init_db():
                 id SERIAL PRIMARY KEY,
                 uuid UUID DEFAULT gen_random_uuid(), 
                 user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- API key belongs to a user
-                project_id INT NOT NULL REFERENCES project(id) ON DELETE CASCADE, -- API key linked to a project
+                project_id INT NOT NULL REFERENCES projects(id) ON DELETE CASCADE, -- API key linked to a project
                 key TEXT NOT NULL UNIQUE, -- The actual API key (hashed for security)
                 created_at TIMESTAMPTZ DEFAULT NOW(), -- Timestamp when the key was created
                 expires_at TIMESTAMPTZ, -- Optional expiration date
@@ -186,12 +186,12 @@ async def init_db():
 
         await conn.execute("CREATE INDEX ON tasks (name);")
         await conn.execute("CREATE INDEX ON tasks (state);")
-        await conn.execute("CREATE INDEX ON project (name);")
+        await conn.execute("CREATE INDEX ON projects (name);")
         await conn.execute("CREATE INDEX ON users (username);")
         await conn.execute("CREATE INDEX ON tools (name);")
 
         await conn.execute("CREATE INDEX ON tasks (uuid);")
-        await conn.execute("CREATE INDEX ON project (uuid);")
+        await conn.execute("CREATE INDEX ON projects (uuid);")
         await conn.execute("CREATE INDEX ON users (uuid);")
         await conn.execute("CREATE INDEX ON task_embeddings (uuid);")
         await conn.execute("CREATE INDEX ON task_metadata (uuid);")
@@ -204,9 +204,13 @@ async def init_db():
                 "INSERT INTO users (username, email, github_id) VALUES ('erik-megarad', 'e@eriklp.com', '1234567890');"
             )
             await conn.execute(
-                "INSERT INTO project (name, description) VALUES ('Test Project', 'A project for testing purposes');"
+                "INSERT INTO projects (uuid, name, description) VALUES ('36e8705e-6604-4e44-b58f-4e8c347a9f31', 'Test Project', 'A project for testing purposes');"
             )
             await conn.execute("INSERT INTO user_projects (user_id, project_id) VALUES (1, 1);")
+
+            await conn.execute(
+                "INSERT INTO tasks (uuid, project_id, name, input, state) VALUES ('123e4567-e89b-12d3-a456-426614174000', 1, 'Test Task', 'Test Input', 'PENDING');"
+            )
 
             test_api_key = os.getenv("TEST_API_KEY", "TEST")
 

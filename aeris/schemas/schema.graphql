@@ -2,7 +2,6 @@ scalar JSON
 
 # Represents a User
 type User {
-  id: ID!
   uuid: ID!
   username: String!
   email: String
@@ -12,7 +11,6 @@ type User {
 
 # Represents a Project
 type Project {
-  id: ID!
   uuid: ID!
   name: String!
   description: String
@@ -24,7 +22,6 @@ type Project {
 
 # Represents a Task
 type Task {
-  id: ID!
   uuid: ID!
   projectId: ID!
   name: String!
@@ -41,7 +38,6 @@ type Task {
 
 # Represents Embedding Information
 type TaskEmbedding {
-  id: ID!
   uuid: ID!
   taskId: ID!
   embedding: [Float!]!
@@ -49,7 +45,6 @@ type TaskEmbedding {
 
 # Represents Task Metadata (key-value pairs)
 type TaskMetadata {
-  id: ID!
   uuid: ID!
   taskId: ID!
   key: String!
@@ -58,7 +53,6 @@ type TaskMetadata {
 
 # Represents an Event Logged for a Task
 type Event {
-  id: ID!
   uuid: ID!
   taskId: ID!
   eventType: String!
@@ -68,7 +62,6 @@ type Event {
 
 # Represents a Tool
 type Tool {
-  id: ID!
   uuid: ID!
   name: String!
   description: String
@@ -78,7 +71,6 @@ type Tool {
 
 # Represents an API Key
 type ApiKey {
-  id: ID!
   uuid: ID!
   userId: ID!
   projectId: ID!
@@ -153,10 +145,10 @@ type Query {
 
   # Project Queries
   projects(pagination: PaginationInput): [Project!]!
-  project(id: ID!): Project
+  project(uuid: ID!): Project
 
   # Task Queries
-  task(id: ID!): Task
+  task(uuid: ID!): Task
   tasks(
     projectId: ID!
     pagination: PaginationInput
@@ -180,8 +172,8 @@ type Query {
 type Mutation {
   # Project Mutations
   createProject(name: String!, description: String): Project!
-  updateProject(id: ID!, name: String, description: String): Project!
-  deleteProject(id: ID!): Boolean!
+  updateProject(uuid: ID!, name: String, description: String): Project!
+  deleteProject(uuid: ID!): Boolean!
 
   # Task Mutations
   createTask(projectId: ID!, name: String!, input: String!): Task!
@@ -192,21 +184,21 @@ type Mutation {
     state: TaskState
     result: String
   ): Task!
-  deleteTask(id: ID!): Boolean!
+  deleteTask(uuid: ID!): Boolean!
 
   # Metadata Mutations
   addMetadata(taskId: ID!, key: String!, value: JSON!): TaskMetadata!
-  updateMetadata(id: ID!, key: String, value: JSON): TaskMetadata!
-  deleteMetadata(id: ID!): Boolean!
+  updateMetadata(uuid: ID!, key: String, value: JSON): TaskMetadata!
+  deleteMetadata(uuid: ID!): Boolean!
 
   # Embedding Mutations
   addEmbedding(taskId: ID!, embedding: [Float!]!): TaskEmbedding!
-  deleteEmbedding(id: ID!): Boolean!
+  deleteEmbedding(uuid: ID!): Boolean!
 
   # Event Mutations
   logEvent(taskId: ID!, eventType: String!, eventData: JSON!): Event!
 
   # API Key Mutations
   createApiKey(projectId: ID!): ApiKey!
-  revokeApiKey(id: ID!): Boolean!
+  revokeApiKey(uuid: ID!): Boolean!
 }
