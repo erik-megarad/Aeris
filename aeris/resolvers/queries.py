@@ -1,16 +1,16 @@
 from ariadne import QueryType
 
+from aeris.data.user import get_user_by_id
+
 query = QueryType()
 
 
 # Example User resolver
 @query.field("me")
-def resolve_me(_, info):
-    import pdb
-
-    pdb.set_trace()
-    user_id = info.context["user_id"]  # Example: Authenticated user ID from context
-    return get_user_by_id(user_id)  # Implement `get_user_by_id` in your data access layer
+async def resolve_me(_, info):
+    user_id = info.context["user_id"]
+    user = await get_user_by_id(user_id)
+    return dict(user)
 
 
 # Projects resolver
