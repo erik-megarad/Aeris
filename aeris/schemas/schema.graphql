@@ -1,0 +1,212 @@
+scalar JSON
+
+# Represents a User
+type User {
+  id: ID!
+  uuid: ID!
+  username: String!
+  email: String
+  githubId: String
+  createdAt: String!
+}
+
+# Represents a Project
+type Project {
+  id: ID!
+  uuid: ID!
+  name: String!
+  description: String
+  createdAt: String!
+  tasks(pagination: PaginationInput, filters: TaskFilters): TaskConnection
+  events(pagination: PaginationInput, filters: EventFilters): EventConnection
+  users: [User!]!
+}
+
+# Represents a Task
+type Task {
+  id: ID!
+  uuid: ID!
+  projectId: ID!
+  name: String!
+  input: String!
+  result: String
+  success: Boolean
+  state: TaskState!
+  createdAt: String!
+  metadata: [TaskMetadata!]!
+  embeddings: [TaskEmbedding!]!
+  events(pagination: PaginationInput, filters: EventFilters): EventConnection
+  tools: [Tool!]!
+}
+
+# Represents Embedding Information
+type TaskEmbedding {
+  id: ID!
+  uuid: ID!
+  taskId: ID!
+  embedding: [Float!]!
+}
+
+# Represents Task Metadata (key-value pairs)
+type TaskMetadata {
+  id: ID!
+  uuid: ID!
+  taskId: ID!
+  key: String!
+  value: JSON!
+}
+
+# Represents an Event Logged for a Task
+type Event {
+  id: ID!
+  uuid: ID!
+  taskId: ID!
+  eventType: String!
+  eventData: JSON!
+  createdAt: String!
+}
+
+# Represents a Tool
+type Tool {
+  id: ID!
+  uuid: ID!
+  name: String!
+  description: String
+  parameters: JSON
+  createdAt: String!
+}
+
+# Represents an API Key
+type ApiKey {
+  id: ID!
+  uuid: ID!
+  userId: ID!
+  projectId: ID!
+  key: String!
+  createdAt: String!
+  expiresAt: String
+  active: Boolean!
+}
+
+# Connection Types for Pagination
+type TaskConnection {
+  edges: [TaskEdge!]!
+  pageInfo: PageInfo!
+}
+
+type TaskEdge {
+  node: Task!
+  cursor: String!
+}
+
+type EventConnection {
+  edges: [EventEdge!]!
+  pageInfo: PageInfo!
+}
+
+type EventEdge {
+  node: Event!
+  cursor: String!
+}
+
+# Pagination Info
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+enum TaskState {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILURE
+}
+
+# Filters for Task Queries
+input TaskFilters {
+  state: TaskState
+  createdBefore: String
+  createdAfter: String
+  nameContains: String
+}
+
+# Filters for Event Queries
+input EventFilters {
+  eventType: String
+  createdBefore: String
+  createdAfter: String
+}
+
+# Pagination Input
+input PaginationInput {
+  first: Int
+  after: String
+  last: Int
+  before: String
+}
+
+type Query {
+  # User Queries
+  me: User
+
+  # Project Queries
+  projects(pagination: PaginationInput): [Project!]!
+  project(id: ID!): Project
+
+  # Task Queries
+  task(id: ID!): Task
+  tasks(
+    projectId: ID!
+    pagination: PaginationInput
+    filters: TaskFilters
+  ): TaskConnection
+
+  # Embedding Queries
+  embeddings(taskId: ID!): [TaskEmbedding!]!
+
+  # Event Queries
+  events(
+    taskId: ID!
+    pagination: PaginationInput
+    filters: EventFilters
+  ): EventConnection
+
+  # API Key Queries
+  apiKeys(userId: ID): [ApiKey!]!
+}
+
+type Mutation {
+  # Project Mutations
+  createProject(name: String!, description: String): Project!
+  updateProject(id: ID!, name: String, description: String): Project!
+  deleteProject(id: ID!): Boolean!
+
+  # Task Mutations
+  createTask(projectId: ID!, name: String!, input: String!): Task!
+  updateTask(
+    id: ID!
+    name: String
+    input: String
+    state: TaskState
+    result: String
+  ): Task!
+  deleteTask(id: ID!): Boolean!
+
+  # Metadata Mutations
+  addMetadata(taskId: ID!, key: String!, value: JSON!): TaskMetadata!
+  updateMetadata(id: ID!, key: String, value: JSON): TaskMetadata!
+  deleteMetadata(id: ID!): Boolean!
+
+  # Embedding Mutations
+  addEmbedding(taskId: ID!, embedding: [Float!]!): TaskEmbedding!
+  deleteEmbedding(id: ID!): Boolean!
+
+  # Event Mutations
+  logEvent(taskId: ID!, eventType: String!, eventData: JSON!): Event!
+
+  # API Key Mutations
+  createApiKey(projectId: ID!): ApiKey!
+  revokeApiKey(id: ID!): Boolean!
+}
