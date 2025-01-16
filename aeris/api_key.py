@@ -67,8 +67,5 @@ async def verify_api_key(api_key: str) -> dict[str, str]:
             # Invalid key or hash
             pass
 
-    import pdb
-
-    pdb.set_trace()
     # If no match found
     raise ValueError("Invalid API key")

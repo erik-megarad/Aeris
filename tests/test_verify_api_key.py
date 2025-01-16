@@ -55,6 +55,7 @@ async def test_api_key_invalid():
     """
     async with httpx.AsyncClient() as client:
         response = await client.post(GRAPHQL_URL, json={"query": query}, headers=headers)
+        breakpoint()
         assert response.status_code == 200
 
         data = response.json()
