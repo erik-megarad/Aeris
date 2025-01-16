@@ -36,12 +36,35 @@ async def test_api_key_auth():
 
 # Test API key invalidation
 @pytest.mark.asyncio
+async def test_api_key_missing():
+    test_api_key = "TEST_INVALID"
+
+    headers = {"Authorization": f"Bearer {test_api_key}"}
+    query = """
+    query {
+        projects {
+            id
+            name
+        }
+    }
+    """
+    async with httpx.AsyncClient() as client:
+        response = await client.post(GRAPHQL_URL, json={"query": query}, headers=headers)
+        assert response.status_code == 401
+
+        data = response.json()
+        assert "errors" in data
+        assert data["errors"][0]["message"] == "Authentication failed: Invalid API key"
+
+
+@pytest.mark.asyncio
 async def test_api_key_invalid():
     test_api_key = "TEST_INVALID"
     async with DB() as conn:
         hashed_api_key = hashpw(test_api_key.encode(), gensalt())
         await conn.execute(
-            "INSERT INTO api_keys (user_id, project_id, key) VALUES (1, 1, $1);", hashed_api_key.decode()
+            "INSERT INTO api_keys (user_id, project_id, key, active) VALUES (1, 1, $1, false);",
+            hashed_api_key.decode(),
         )
 
     headers = {"Authorization": f"Bearer {test_api_key}"}
@@ -55,8 +78,35 @@ async def test_api_key_invalid():
     """
     async with httpx.AsyncClient() as client:
         response = await client.post(GRAPHQL_URL, json={"query": query}, headers=headers)
-        breakpoint()
-        assert response.status_code == 200
+        assert response.status_code == 401
+
+        data = response.json()
+        assert "errors" in data
+        assert data["errors"][0]["message"] == "Authentication failed: Invalid API key"
+
+
+@pytest.mark.asyncio
+async def test_api_key_expired():
+    test_api_key = "TEST_INVALID"
+    async with DB() as conn:
+        hashed_api_key = hashpw(test_api_key.encode(), gensalt())
+        await conn.execute(
+            "INSERT INTO api_keys (user_id, project_id, key, expires_at) VALUES (1, 1, $1, NOW());",
+            hashed_api_key.decode(),
+        )
+
+    headers = {"Authorization": f"Bearer {test_api_key}"}
+    query = """
+    query {
+        projects {
+            id
+            name
+        }
+    }
+    """
+    async with httpx.AsyncClient() as client:
+        response = await client.post(GRAPHQL_URL, json={"query": query}, headers=headers)
+        assert response.status_code == 401
 
         data = response.json()
         assert "errors" in data

@@ -55,6 +55,9 @@ async def verify_api_key(api_key: str) -> dict[str, str]:
     for row in result:
         user_id, project_id, hashed_key, expires_at, active = row
 
+        if not active:
+            continue
+
         try:
             if checkpw(api_key.encode(), hashed_key.encode()):
                 # If match, validate other constraints
