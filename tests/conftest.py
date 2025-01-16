@@ -1,7 +1,9 @@
 import logging
 import os
 import subprocess
+import sys
 import time
+from asyncio import get_event_loop_policy
 
 import httpx
 import pytest
@@ -34,8 +36,8 @@ def graphql_server():
     # Start the server
     server_process = subprocess.Popen(
         ["uvicorn", "aeris.main:app", "--port", PORT],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stdout=sys.stdout,
+        stderr=sys.stderr,
     )
     time.sleep(0.5)
 
@@ -57,3 +59,11 @@ def graphql_server():
     # Teardown: Stop the server
     server_process.terminate()
     server_process.wait()
+
+
+@pytest_asyncio.fixture(scope="session", autouse=True)
+def event_loop(request):
+    """Create an instance of the default event loop for each test case."""
+    loop = get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
