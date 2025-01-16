@@ -39,7 +39,7 @@ def graphql_server():
         stdout=sys.stdout,
         stderr=sys.stderr,
     )
-    time.sleep(0.5)
+    time.sleep(1.5)
 
     # Wait for the server to start by polling the port
     start_time = time.time()
