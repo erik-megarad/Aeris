@@ -71,7 +71,7 @@ async def update_project(
         )
 
 
-async def delete_project(uuid: UUID, user_id: int) -> Record:
+async def delete_project(uuid: UUID, user_id: int) -> Record | None:
     async with DB() as conn:
         project = await get_project_by_uuid(uuid, user_id)
         if not project:
