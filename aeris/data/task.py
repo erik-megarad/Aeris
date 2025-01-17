@@ -17,13 +17,13 @@ async def get_task_by_uuid(uuid: UUID, user_id: int) -> Record:
 
 async def create_task(project_id: UUID, user_id: int, name: str, input: str) -> Record | None:
     async with DB() as conn:
-        project = get_project_by_uuid(project_id, user_id)
+        project = await get_project_by_uuid(project_id, user_id)
         if not project:
             return None
 
         return await conn.fetchrow(
             "INSERT INTO tasks (project_id, name, input) VALUES ($1, $2, $3) RETURNING *",
-            project_id,
+            project["id"],
             name,
             input,
         )
