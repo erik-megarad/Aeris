@@ -40,9 +40,8 @@ async def get_tasks_for_project(
 async def create_project(user_id: int, name: str, description: str | None = None) -> Record:
     async with DB() as conn:
         project = await conn.fetchrow(
-            "INSERT INTO projects (name, description) VALUES ($1, $2, $3) RETURNING *",
+            "INSERT INTO projects (name, description) VALUES ($1, $2) RETURNING *",
             name,
-            user_id,
             description,
         )
 

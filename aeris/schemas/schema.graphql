@@ -171,7 +171,7 @@ type Query {
 
 type Mutation {
   # Project Mutations
-  createProject(name: String!, description: String): Project!
+  createProject(name: String!, description: String): Project
   updateProject(id: ID!, name: String, description: String): Project!
   deleteProject(id: ID!): Boolean!
 

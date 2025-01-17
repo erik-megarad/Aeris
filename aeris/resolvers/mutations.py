@@ -2,15 +2,16 @@ from ariadne import MutationType
 
 from aeris.data.project import create_project, delete_project, update_project
 from aeris.data.task import create_task, delete_task, update_task
+from aeris.decorators import decorate_project
 
 mutation = MutationType()
 
 
 # Example Project Mutations
 @mutation.field("createProject")
-def resolve_create_project(_, info, name, description=None):
+async def resolve_create_project(_, info, name, description=None):
     user_id = info.context["user_id"]
-    return create_project(user_id, name, description)
+    return decorate_project(await create_project(user_id, name, description))
 
 
 @mutation.field("updateProject")
