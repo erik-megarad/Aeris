@@ -36,6 +36,12 @@ type Task {
   tools: [Tool!]!
 }
 
+# Represents a Task's similarity to the given input
+type TaskSimilarity {
+  task: Task!
+  similarity: Float!
+}
+
 # Represents Embedding Information
 type TaskEmbedding {
   id: ID!
@@ -154,6 +160,7 @@ type Query {
     pagination: PaginationInput
     filters: TaskFilters
   ): TaskConnection
+  findSimilarTasks(input: String, embedding: [Float!]): [TaskSimilarity!]!
 
   # Embedding Queries
   embeddings(taskId: ID!): [TaskEmbedding!]!

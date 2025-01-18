@@ -9,6 +9,13 @@ def decorate_task(task: Record) -> dict[str, Any]:
     return task_dict
 
 
+def decorate_task_similarity(task: Record) -> dict[str, Any]:
+    task_dict = dict(task)
+    similarity = task_dict.pop("similarity_score")
+    task_dict["id"] = task_dict.pop("uuid")
+    return {"similarity": similarity, "task": task_dict}
+
+
 def decorate_project(project: Record) -> dict[str, Any]:
     project_dict = dict(project)
     project_dict["id"] = project_dict.pop("uuid")

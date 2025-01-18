@@ -80,3 +80,31 @@ async def test_create_task():
         assert "createTask" in data["data"]
         assert data["data"]["createTask"]["name"] == "New Task"
         assert data["data"]["createTask"]["id"] is not None
+
+
+@pytest.mark.asyncio
+async def test_find_similar_tasks():
+    query = """
+    query {
+      findSimilarTasks(input: "Write a blog post about the today's news") {
+        similarity
+        task {
+          id
+          name
+          input
+        }
+      }
+    }
+    """
+    headers = {"Authorization": "Bearer TEST"}
+    async with httpx.AsyncClient() as client:
+        response = await client.post(GRAPHQL_URL, json={"query": query}, headers=headers)
+        assert response.status_code == 200
+
+        data = response.json()
+        assert "data" in data
+        assert "findSimilarTasks" in data["data"]
+        assert len(data["data"]["findSimilarTasks"]) == 1
+        assert data["data"]["findSimilarTasks"][0]["task"]["name"] == "Test Task"
+        assert data["data"]["findSimilarTasks"][0]["task"]["id"] == "123e4567-e89b-12d3-a456-426614174000"
+        assert data["data"]["findSimilarTasks"][0]["similarity"] < 0.5

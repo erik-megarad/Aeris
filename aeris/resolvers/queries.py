@@ -1,9 +1,10 @@
 from ariadne import QueryType
 
 from aeris.data.project import get_project_by_uuid, get_projects, get_tasks_for_project
-from aeris.data.task import get_task_by_uuid
+from aeris.data.task import find_similar_tasks, get_task_by_uuid
 from aeris.data.user import get_user_by_id
-from aeris.decorators import decorate_project, decorate_task, decorate_user
+from aeris.decorators import decorate_project, decorate_task, decorate_task_similarity, decorate_user
+from aeris.embeddings import generate_openai_embedding
 
 query = QueryType()
 
@@ -43,3 +44,10 @@ async def resolve_tasks(_, info, projectId, pagination=None, filters=None):
 async def resolve_task(_, info, id):
     user_id = info.context["user_id"]
     return decorate_task(await get_task_by_uuid(id, user_id))
+
+
+@query.field("findSimilarTasks")
+async def resolve_find_similar_tasks(_, info, input):
+    embedding = generate_openai_embedding(input)
+    similar_tasks = await find_similar_tasks(embedding)
+    return [decorate_task_similarity(task) for task in similar_tasks]

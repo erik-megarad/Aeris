@@ -79,3 +79,19 @@ async def get_embeddings_for_task(task_id: int) -> list[Record]:
 async def get_metadata_for_task(task_id: int) -> Record:
     async with DB() as conn:
         return await conn.fetchrow("SELECT * FROM task_metadata WHERE task_id = $1", task_id)
+
+
+async def find_similar_tasks(embedding: list[float]) -> list[Record]:
+    async with DB() as conn:
+        return await conn.fetch(
+            """
+                SELECT DISTINCT ON (embedding)
+                  *, embedding <-> $1 AS similarity_score
+                FROM task_embeddings
+                INNER JOIN tasks ON task_embeddings.task_id = tasks.id
+                WHERE embedding <-> $1 < 0.5
+                ORDER BY embedding, embedding <-> $1
+                LIMIT 5
+            """,
+            embedding,
+        )
