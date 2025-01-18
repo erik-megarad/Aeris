@@ -2,6 +2,9 @@ import json
 
 from ariadne import ObjectType, ScalarType
 
+from aeris.data.project import get_tasks_for_project
+from aeris.data.task import get_embeddings_for_task, get_metadata_for_task, get_task_by_uuid
+
 project = ObjectType("Project")
 task = ObjectType("Task")
 event = ObjectType("Event")
@@ -15,18 +18,22 @@ def resolve_project_tasks(obj, info, pagination=None, filters=None):
 
 
 @task.field("embeddings")
-def resolve_task_embeddings(obj, info):
-    return get_embeddings_for_task(obj.id)
+async def resolve_task_embeddings(obj, info):
+    user_id = info.context["user_id"]
+    task_record = await get_task_by_uuid(obj["id"], user_id)
+    result = await get_embeddings_for_task(task_record["id"])
+    decorated = [
+        {"id": embedding["id"], "task_id": task_record["id"], "embedding": embedding["embedding"].tolist()}
+        for embedding in result
+    ]
+    return decorated
 
 
 @task.field("metadata")
-def resolve_task_metadata(obj, info):
-    return get_metadata_for_task(obj.id)
-
-
-@event.field("eventData")
-def resolve_event_data(obj, info):
-    return obj.event_data  # Assuming it's stored as JSON in the database
+async def resolve_task_metadata(obj, info):
+    user_id = info.context["user_id"]
+    task_record = await get_task_by_uuid(obj["id"], user_id)
+    return await get_metadata_for_task(task_record["id"])
 
 
 # Define the JSON scalar

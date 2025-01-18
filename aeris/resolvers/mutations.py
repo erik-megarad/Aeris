@@ -1,8 +1,9 @@
 from ariadne import MutationType
 
 from aeris.data.project import create_project, delete_project, update_project
-from aeris.data.task import create_task, delete_task, update_task
+from aeris.data.task import create_task, create_task_embedding, delete_task, update_task
 from aeris.decorators import decorate_project, decorate_task
+from aeris.embeddings import generate_openai_embedding
 
 mutation = MutationType()
 
@@ -34,6 +35,10 @@ async def resolve_create_task(_, info, projectId, name, input):
     if not task:
         # TODO: Error handling
         return None
+
+    embedding = generate_openai_embedding(input)
+    await create_task_embedding(task["id"], embedding)
+
     return decorate_task(task)
 
 

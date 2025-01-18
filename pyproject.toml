@@ -22,6 +22,10 @@ asyncpg-stubs = "^0.30.0"
 pypika-stubs = "^0.48.0a1"
 watchfiles = "^1.0.4"
 
+
+[tool.poetry.dependencies]
+openai = "^1.59.8"
+pgvector = "^0.3.6"
 [tool.ruff]
 line-length = 120
 lint.select = ["E", "F", "I", "B"]

@@ -60,3 +60,22 @@ async def delete_task(uuid: UUID, user_id: int) -> Record | None:
 
         await conn.execute("DELETE FROM tasks WHERE uuid = $1", uuid)
         return task
+
+
+async def create_task_embedding(task_id: int, embedding: list[float]) -> Record:
+    async with DB() as conn:
+        return await conn.fetchrow(
+            "INSERT INTO task_embeddings (task_id, embedding) VALUES ($1, $2) RETURNING *",
+            task_id,
+            embedding,
+        )
+
+
+async def get_embeddings_for_task(task_id: int) -> list[Record]:
+    async with DB() as conn:
+        return await conn.fetch("SELECT * FROM task_embeddings WHERE task_id = $1", task_id)
+
+
+async def get_metadata_for_task(task_id: int) -> Record:
+    async with DB() as conn:
+        return await conn.fetchrow("SELECT * FROM task_metadata WHERE task_id = $1", task_id)
