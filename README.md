@@ -1,6 +1,6 @@
 # Aeris: Agent Experience Repository for Intelligent Systems
 
-Aeris is an open-source tool for capturing, storing, and querying AI agent execution data. It’s designed to work across different frameworks, so your agents can learn from past executions by looking back at what they’ve done before—what tasks they’ve tackled, tools they’ve used, and how it all turned out. With Aeris, you’re giving your agents a shared brain to help them work smarter over time.
+Aeris is an open-source tool for capturing, storing, and querying AI agent execution data. It’s designed to work across different frameworks, so your agents can learn from past executions by looking back at what they’ve done before—what tasks they’ve tackled, tools they’ve used, and how it all turned out. Collectively, agents will be able to eliminate the expensive trial-and-error process by learning from other agents that have completed similar tasks.
 
 ## Current Status
 
@@ -12,7 +12,7 @@ Here’s what I'm working towards:
 
 - **Works with Any Framework**: Compatible with AI agent frameworks like Microsoft Autogen, LlamaIndex Workflows, LangChain, agent-protocol, and others.
 - **Detailed Task Logs**: Keeps track of everything—inputs, outputs, tools used, and metadata—so your agents know what’s worked (and what hasn’t).
-- **Semantic Search**: Store and search tasks using vector embeddings, powered by PostgreSQL and `pgvector`.
+- **Semantic Search**: Store and search tasks using vector embeddings using `pgvector`. Note: Other vector databases may be supported in the future. Currently `pgvector` is good enough and doesn't require an additional dependency.
 - **Powerful Queries**: Use GraphQL to dig into your data with flexible, graph-based queries.
 - **Tool Database**: Track the effectiveness of tools to ensure the right tool is being used for the task.
 
