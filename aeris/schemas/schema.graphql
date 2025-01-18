@@ -162,18 +162,12 @@ type Query {
   ): TaskConnection
   findSimilarTasks(input: String, embedding: [Float!]): [TaskSimilarity!]!
 
-  # Embedding Queries
-  embeddings(taskId: ID!): [TaskEmbedding!]!
-
   # Event Queries
   events(
     taskId: ID!
     pagination: PaginationInput
     filters: EventFilters
   ): EventConnection
-
-  # API Key Queries
-  apiKeys(userId: ID): [ApiKey!]!
 }
 
 type Mutation {
@@ -198,14 +192,6 @@ type Mutation {
   updateMetadata(id: ID!, key: String, value: JSON): TaskMetadata!
   deleteMetadata(id: ID!): Boolean!
 
-  # Embedding Mutations
-  addEmbedding(taskId: ID!, embedding: [Float!]!): TaskEmbedding!
-  deleteEmbedding(id: ID!): Boolean!
-
   # Event Mutations
   logEvent(taskId: ID!, eventType: String!, eventData: JSON!): Event!
-
-  # API Key Mutations
-  createApiKey(projectId: ID!): ApiKey!
-  revokeApiKey(id: ID!): Boolean!
 }
