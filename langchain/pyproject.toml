@@ -1,0 +1,26 @@
+[project]
+packages = [{ include = "aeris_langchain" }]
+
+name = "aeris-langchain"
+version = "0.1.0"
+description = "Langchain tools for Aeris Agent Experience Replay"
+authors = [{ name = "Erik Peterson", email = "e@eriklp.com" }]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.10,<4"
+dependencies = [
+    "gql (>=3.5.0,<4.0.0)",
+    "requests (>=2.32.3,<3.0.0)",
+    "langchain (>=0.3.14,<0.4.0)",
+]
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+poetry-dynamic-versioning = "^1.7.0"
+ruff = "^0.9.2"
+pytest = "^8.3.4"
+
+[tool.poetry-dynamic-versioning]
+enable = true
