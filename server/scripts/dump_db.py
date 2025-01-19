@@ -1,5 +1,6 @@
 import asyncio
 import os
+from typing import List
 
 import asyncpg
 
@@ -10,7 +11,7 @@ env()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 
-async def dump_schema_to_file(database_url: str, output_file: str):
+async def dump_schema_to_file(database_url: str, output_file: str) -> None:
     conn = await asyncpg.connect(database_url)
 
     # Query tables and columns
@@ -43,13 +44,13 @@ async def dump_schema_to_file(database_url: str, output_file: str):
         WHERE tc.table_schema = 'public';
     """)
 
-    # Group columns by table
+    table_columns: dict[str, List[asyncpg.Record]] = {}
     table_columns = {}
     for row in tables:
         table_columns.setdefault(row["table_name"], []).append(row)
 
     # Group constraints by table and type
-    table_constraints = {}
+    table_constraints: dict[str, dict[str, list[asyncpg.Record]]] = {}
     for row in constraints:
         table_constraints.setdefault(row["table_name"], {}).setdefault(row["constraint_type"], []).append(row)
 
@@ -91,4 +92,5 @@ async def dump_schema_to_file(database_url: str, output_file: str):
     await conn.close()
 
 
-asyncio.run(dump_schema_to_file(DATABASE_URL, "schema_dump.sql"))
+if DATABASE_URL:
+    asyncio.run(dump_schema_to_file(DATABASE_URL, "schema_dump.sql"))
