@@ -20,8 +20,12 @@ class AerisClient:
             api_key (str): API key for authenticating requests.
             endpoint (str): The GraphQL API endpoint. Defaults to the production URL.
         """
-        api_key = api_key or os.getenv("AERIS_API_KEY")
         endpoint = endpoint or os.getenv("AERIS_API_ENDPOINT") or DEFAULT_ENDPOINT
+        api_key = api_key or os.getenv("AERIS_API_KEY")
+
+        if not api_key:
+            raise ValueError("API key is required to interact with the Aeris API.")
+
         self.transport = RequestsHTTPTransport(
             url=endpoint, headers={"Authorization": f"Bearer {api_key}"}
         )

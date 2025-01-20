@@ -89,7 +89,7 @@ async def find_similar_tasks(embedding: list[float]) -> list[Record]:
                   *, embedding <-> $1 AS similarity_score
                 FROM task_embeddings
                 INNER JOIN tasks ON task_embeddings.task_id = tasks.id
-                WHERE embedding <-> $1 < 0.5
+                WHERE embedding <-> $1 < 0.5 AND (state = 'SUCCESS' OR state = 'FAILURE')
                 ORDER BY embedding, embedding <-> $1
                 LIMIT 5
             """,

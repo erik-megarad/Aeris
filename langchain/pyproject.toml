@@ -21,6 +21,9 @@ build-backend = "poetry.core.masonry.api"
 poetry-dynamic-versioning = "^1.7.0"
 ruff = "^0.9.2"
 pytest = "^8.3.4"
+langchain-openai = "^0.3.1"
+langchain-community = "^0.3.14"
+google-search-results = "^2.4.2"
 
 [tool.poetry-dynamic-versioning]
 enable = true
