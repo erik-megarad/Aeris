@@ -6,6 +6,7 @@ from asyncpg import Record
 def decorate_task(task: Record) -> dict[str, Any]:
     task_dict = dict(task)
     task_dict["id"] = task_dict.pop("uuid")
+    task_dict["createdAt"] = task_dict["created_at"].isoformat()
     return task_dict
 
 

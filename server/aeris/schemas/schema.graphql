@@ -23,7 +23,6 @@ type Project {
 # Represents a Task
 type Task {
   id: ID!
-  projectId: ID!
   name: String!
   input: String!
   result: String
