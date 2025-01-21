@@ -105,3 +105,33 @@ class AerisMiddleware:
         )
 
         return f"{existing_prompt}\n\n### Similar Tasks:\nAnalyze lessons from similar tasks to inform your plan. Note: Lower similarity scores indicate closer matches.\n{similar_context}"
+
+    def log_event(
+        self, task_id: str, event_type: str, event_data: Dict[str, Any]
+    ) -> str:
+        """
+        Log an event for a task in Aeris.
+
+        Args:
+            task_id (str): The UUID of the task to log the event for.
+            event_type (str): The type of the event.
+            event_data (Dict[str, Any]): Data associated with the event.
+
+        Returns:
+            str: The ID of the logged event.
+        """
+        mutation = """
+        mutation LogEvent($taskId: ID!, $eventType: String!, $eventData: JSON!) {
+            logEvent(taskId: $taskId, eventType: $eventType, eventData: $eventData) {
+                id
+            }
+        }
+        """
+        variables = {
+            "taskId": task_id,
+            "eventType": event_type,
+            "eventData": event_data,
+        }
+        response = self.client.execute_mutation(mutation, variables)
+        breakpoint()
+        return response["logEvent"]["id"]

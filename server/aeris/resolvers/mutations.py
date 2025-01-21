@@ -1,11 +1,14 @@
+import logging
+
 from ariadne import MutationType
 
 from aeris.data.project import create_project, delete_project, update_project
-from aeris.data.task import create_task, create_task_embedding, delete_task, update_task
-from aeris.decorators import decorate_project, decorate_task
+from aeris.data.task import create_event, create_task, create_task_embedding, delete_task, get_task_by_uuid, update_task
+from aeris.decorators import decorate_event, decorate_project, decorate_task
 from aeris.embeddings import generate_openai_embedding
 
 mutation = MutationType()
+logger = logging.getLogger(__name__)
 
 
 # Projects
@@ -52,3 +55,20 @@ async def resolve_update_task(_, info, id, name=None, input=None, state=None, re
 async def resolve_delete_task(_, info, id):
     user_id = info.context["user_id"]
     return decorate_task(await delete_task(id, user_id))
+
+
+@mutation.field("logEvent")
+async def resolve_log_event(_, info, taskId, eventType, eventData):
+    user_id = info.context["user_id"]
+
+    # Validate task ownership (optional, for security)
+    task = await get_task_by_uuid(taskId, user_id)
+    if not task:
+        raise ValueError("Task not found or access denied")
+
+    # Create the event
+    logger.info(f"Logging event: {eventType} - {eventData}")
+    event = await create_event(taskId, eventType, eventData)
+
+    # Decorate the event for GraphQL
+    return decorate_event(event)

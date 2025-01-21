@@ -27,3 +27,15 @@ def decorate_user(user: Record) -> dict[str, Any]:
     user_dict = dict(user)
     user_dict["id"] = user_dict.pop("uuid")
     return user_dict
+
+
+def decorate_event(event):
+    """
+    Transform the raw database event into the GraphQL schema format.
+    """
+    return {
+        "id": event["id"],
+        "eventType": event["event_type"],
+        "eventData": event["event_data"],
+        "createdAt": event["created_at"].isoformat(),
+    }

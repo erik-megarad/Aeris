@@ -71,6 +71,19 @@ async def create_task_embedding(task_id: int, embedding: list[float]) -> Record:
         )
 
 
+async def create_event(task_id: int, event_type: str, event_data: dict) -> Record:
+    """
+    Insert a new event into the database.
+    """
+    query = """
+    INSERT INTO events (task_id, event_type, event_data)
+    VALUES ($1, $2, $3, $4)
+    RETURNING id, task_id, event_type, event_data
+    """
+    async with DB() as conn:
+        return await conn.fetchrow(query, task_id, event_type, event_data)
+
+
 async def get_embeddings_for_task(task_id: int) -> list[Record]:
     async with DB() as conn:
         return await conn.fetch("SELECT * FROM task_embeddings WHERE task_id = $1", task_id)

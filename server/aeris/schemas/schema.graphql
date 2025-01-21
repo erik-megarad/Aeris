@@ -44,14 +44,12 @@ type TaskSimilarity {
 # Represents Embedding Information
 type TaskEmbedding {
   id: ID!
-  taskId: ID!
   embedding: [Float!]!
 }
 
 # Represents Task Metadata (key-value pairs)
 type TaskMetadata {
   id: ID!
-  taskId: ID!
   key: String!
   value: JSON!
 }
@@ -59,7 +57,6 @@ type TaskMetadata {
 # Represents an Event Logged for a Task
 type Event {
   id: ID!
-  taskId: ID!
   eventType: String!
   eventData: JSON!
   createdAt: String!
@@ -162,11 +159,7 @@ type Query {
   findSimilarTasks(input: String, embedding: [Float!]): [TaskSimilarity!]!
 
   # Event Queries
-  events(
-    taskId: ID!
-    pagination: PaginationInput
-    filters: EventFilters
-  ): EventConnection
+  events(pagination: PaginationInput, filters: EventFilters): EventConnection
 }
 
 type Mutation {
