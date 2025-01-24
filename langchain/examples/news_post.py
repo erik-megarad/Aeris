@@ -1,10 +1,10 @@
 from aeris_langchain.middleware import AerisMiddleware
-from aeris_langchain.runnables import EnrichPromptRunnable, EventLoggingRunnable
 from dotenv import load_dotenv
 from langchain_community.utilities import SerpAPIWrapper
 from langchain_core.runnables import RunnableLambda
 from langchain_openai import ChatOpenAI
 
+from langchain_core.globals import set_debug
 from langchain.prompts import PromptTemplate
 
 load_dotenv()
@@ -24,9 +24,10 @@ def main():
 
     task_name = "Today's Top News Stories"
     task_input = "Write a blog post about today's top news stories"
-    task_id = middleware.register_task(name=task_name, task_input=task_input)
+    middleware.register_task(name=task_name, task_input=task_input)
 
-    llm = ChatOpenAI(model="gpt-4", temperature=0.7, verbose=True)
+    set_debug(True)
+    llm = ChatOpenAI(model="gpt-4", temperature=0.7)
 
     # Wrap SerpAPIWrapper as a RunnableLambda
     search_tool = RunnableLambda(lambda query: SerpAPIWrapper().run(query))
@@ -41,12 +42,11 @@ def main():
         input_variables=["key_points"],
         template="Write a blog post based on the following key points:\n{key_points}",
     )
-    blog_post_chain = EnrichPromptRunnable(middleware) | blog_post_prompt | llm
-
+    blog_post_chain = blog_post_prompt
     # Define the complete workflow using the | operator
     news_to_blog_chain = (
+        middleware.prompt_enrichment_runnable() |
         search_tool
-        | EventLoggingRunnable(middleware, task_id=task_id)
         | RunnableLambda(
             lambda articles: [
                 summarization_chain.invoke({"article": article}) for article in articles
@@ -57,7 +57,7 @@ def main():
     )
 
     # Run the workflow
-    blog_post = news_to_blog_chain.invoke(task_input)
+    blog_post = news_to_blog_chain.invoke(task_input, config=middleware.config())
     print(blog_post)
 
 

@@ -1,13 +1,20 @@
 import os
 from typing import Any, Dict, List, Optional
+from langchain_core.runnables.config import  RunnableConfig
+from uuid import UUID
 
+from aeris_langchain.callback_handler import AerisCallbackHandler
 from aeris_langchain.client import AerisClient
+from aeris_langchain.runnables import EnrichPromptRunnable
 
 
 class AerisMiddleware:
     """
     Middleware for integrating Aeris functionality into agent workflows.
     """
+    task_id: Optional[str] = None
+    project_id: str
+    client: AerisClient
 
     def __init__(
         self, project_id: Optional[str] = None, client: Optional[AerisClient] = None
@@ -19,11 +26,12 @@ class AerisMiddleware:
             client (AerisClient): An instance of the Aeris GraphQL client.
             project_id (str): The ID of the Aeris project to interact with.
         """
-        self.project_id = project_id or os.getenv("AERIS_PROJECT_ID")
-        if not self.project_id:
+        project_id = project_id or os.getenv("AERIS_PROJECT_ID")
+        if not project_id:
             raise ValueError(
                 "You must provide a project ID. Create a project in Aeris and set the ID."
             )
+        self.project_id = project_id
         self.client = client or AerisClient()
 
     def register_task(self, name: str, task_input: str) -> str:
@@ -46,7 +54,11 @@ class AerisMiddleware:
         """
         variables = {"projectId": self.project_id, "name": name, "input": task_input}
         response = self.client.execute_mutation(mutation, variables)
-        return response["createTask"]["id"]
+        self.task_id = response["createTask"]["id"]
+        if not self.task_id:
+            raise ValueError(f"Failed to create task: {response}")
+
+        return self.task_id
 
     def fetch_similar_tasks(
         self, task_input: Optional[str] = None, embedding: Optional[List[float]] = None
@@ -107,7 +119,7 @@ class AerisMiddleware:
         return f"{existing_prompt}\n\n### Similar Tasks:\nAnalyze lessons from similar tasks to inform your plan. Note: Lower similarity scores indicate closer matches.\n{similar_context}"
 
     def log_event(
-        self, task_id: str, event_type: str, event_data: Dict[str, Any]
+        self, event_type: str, event_data: Dict[str, Any]
     ) -> str:
         """
         Log an event for a task in Aeris.
@@ -128,10 +140,22 @@ class AerisMiddleware:
         }
         """
         variables = {
-            "taskId": task_id,
+            "taskId": self.task_id,
             "eventType": event_type,
             "eventData": event_data,
         }
         response = self.client.execute_mutation(mutation, variables)
         breakpoint()
         return response["logEvent"]["id"]
+    
+    def callback_handler(self):
+        return AerisCallbackHandler(self)
+    
+    def config(self):
+        return RunnableConfig(
+            callback_handler=self.callback_handler()
+        )
+    
+    def prompt_enrichment_runnable(self):
+        return EnrichPromptRunnable(self)
+        
