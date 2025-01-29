@@ -54,10 +54,12 @@ async def resolve_create_task(_, info, projectId, name, input):
 
 @mutation.field("updateTask")
 async def resolve_update_task(
-    _, info, id, name=None, input=None, state=None, result=None
+    _, info, id, name=None, input=None, state=None, success=None, feedback=None
 ):
     user_id = info.context["user_id"]
-    return decorate_task(await update_task(id, user_id, name, input, state, result))
+    return decorate_task(
+        await update_task(id, user_id, name, input, state, success, feedback)
+    )
 
 
 @mutation.field("deleteTask")
@@ -70,7 +72,6 @@ async def resolve_delete_task(_, info, id):
 async def resolve_log_event(_, info, taskId, eventType, eventData):
     user_id = info.context["user_id"]
 
-    # Validate task ownership (optional, for security)
     task = await get_task_by_uuid(taskId, user_id)
     if not task:
         raise ValueError("Task not found or access denied")

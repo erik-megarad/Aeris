@@ -155,3 +155,24 @@ class AerisClient:
         event_type = event.__class__.__name__
 
         return await self.log_event(event_type, event_data)
+
+    async def end_task(self, success: bool, feedback: str) -> str:
+        """
+        End a task in Aeris. This is typically called when the task is complete or failed.
+        """
+
+        mutation = """
+        mutation EndTask($taskId: ID!, $success: Boolean!, $feedback: String!, status: TaskState!) {
+            updateTask(id: $taskId, success: $success, feedback: $feedback, status: status) {
+                id
+            }
+        }
+        """
+        variables = {
+            "taskId": self.task_id,
+            "success": success,
+            "feedback": feedback,
+            "status": "SUCCESS" if success else "FAILURE",
+        }
+        response = await self.execute_mutation(mutation, variables)
+        return response["updateTask"]["id"]

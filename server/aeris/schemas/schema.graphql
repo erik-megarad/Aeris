@@ -175,7 +175,8 @@ type Mutation {
     name: String
     input: String
     state: TaskState
-    result: String
+    success: Boolean
+    feedback: String
   ): Task!
   deleteTask(id: ID!): Boolean!
 

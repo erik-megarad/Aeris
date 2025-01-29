@@ -66,8 +66,7 @@ aeris_client = AerisClient()
 
 
 async def main():
-    # task = input("What would you like me to do? ")
-    task = "In the form of a two-minute video script give me a weather report for Denver, CO"
+    task = input("What would you like me to do? ")
     await aeris_client.register_task(name=task, task_input=task)
     handler = agent_workflow.run(
         user_msg=task,
@@ -108,6 +107,10 @@ async def main():
         elif isinstance(event, ToolCall):
             print(f"🔨 Calling Tool: {event.tool_name}")
             print(f"  With arguments: {event.tool_kwargs}")
+
+    human_success = input("Is the task complete? (y/n) ").lower() == "y"
+    human_feedback = input("What is your feedback on the execution of the task? ")
+    await aeris_client.end_task(human_success, human_feedback)
 
 
 if __name__ == "__main__":

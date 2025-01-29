@@ -42,7 +42,9 @@ class DB:
 
     def __init__(self):
         if _pool is None:
-            raise RuntimeError("Database pool not initialized. Call init_db_pool() first.")
+            raise RuntimeError(
+                "Database pool not initialized. Call init_db_pool() first."
+            )
 
     async def __aenter__(self):
         self.conn = await _pool.acquire()
@@ -72,7 +74,8 @@ async def init_db():
         await conn.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
         await conn.execute("CREATE EXTENSION IF NOT EXISTS vector;")
 
-        await conn.execute("""
+        await conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS projects (
                 id SERIAL PRIMARY KEY,
                 uuid UUID DEFAULT gen_random_uuid(),
@@ -80,32 +83,38 @@ async def init_db():
                 description TEXT, -- Optional description of the project
                 created_at TIMESTAMPTZ DEFAULT NOW()
             );
-        """)
+        """
+        )
 
-        await conn.execute("""
+        await conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS tasks (
                 id SERIAL PRIMARY KEY,
                 uuid UUID DEFAULT gen_random_uuid(),
                 project_id INT NOT NULL REFERENCES projects(id) ON DELETE CASCADE, -- Links task to project
                 name TEXT NOT NULL, -- User-defined name of the task
                 input TEXT NOT NULL, -- Task input
-                result TEXT, -- Final output of the task
                 success BOOLEAN, -- Task success status, null is incomplete
+                feedback TEXT, -- Human feedback on task output
                 state TEXT NOT NULL DEFAULT 'PENDING', -- Task state (e.g., "PENDING", "RUNNING", "COMPLETED")
                 created_at TIMESTAMPTZ DEFAULT NOW()
             );
-        """)
+        """
+        )
 
-        await conn.execute("""
+        await conn.execute(
+            """
             CREATE TABLE task_embeddings (
                 id SERIAL PRIMARY KEY,
                 uuid UUID DEFAULT gen_random_uuid(),
                 task_id INT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE, -- Links embedding to task
                 embedding VECTOR(1536) NOT NULL -- Vector representation of the task
             );
-        """)
+        """
+        )
 
-        await conn.execute("""
+        await conn.execute(
+            """
            CREATE TABLE users (
                 id SERIAL PRIMARY KEY,
                 uuid UUID DEFAULT gen_random_uuid(),
@@ -114,17 +123,21 @@ async def init_db():
                 github_id TEXT UNIQUE, -- Optional GitHub ID for user account
                 created_at TIMESTAMPTZ DEFAULT NOW() -- Timestamp of user creation
             );
-        """)
+        """
+        )
 
-        await conn.execute("""
+        await conn.execute(
+            """
             CREATE TABLE user_projects (
                 user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- Links user to project
                 project_id INT NOT NULL REFERENCES projects(id) ON DELETE CASCADE, -- Links user to project
                 PRIMARY KEY (user_id, project_id)
             );
-        """)
+        """
+        )
 
-        await conn.execute("""
+        await conn.execute(
+            """
            CREATE TABLE task_metadata (
                 id SERIAL PRIMARY KEY,
                 uuid UUID DEFAULT gen_random_uuid(),
@@ -132,9 +145,11 @@ async def init_db():
                 key TEXT NOT NULL, -- Metadata key (e.g., "execution_time", "goals")
                 value JSONB NOT NULL -- Metadata value (e.g., "12s", "['goal1', 'goal2']")
             );
-        """)
+        """
+        )
 
-        await conn.execute("""
+        await conn.execute(
+            """
             CREATE TABLE events (
                 id SERIAL PRIMARY KEY,
                 uuid UUID DEFAULT gen_random_uuid(),
@@ -143,9 +158,11 @@ async def init_db():
                 event_data JSONB NOT NULL, -- Payload associated with the event
                 created_at TIMESTAMPTZ DEFAULT NOW() -- Timestamp of event creation
             );
-        """)
+        """
+        )
 
-        await conn.execute("""
+        await conn.execute(
+            """
             CREATE TABLE tools (
                 id SERIAL PRIMARY KEY,
                 uuid UUID DEFAULT gen_random_uuid(),
@@ -154,17 +171,21 @@ async def init_db():
                 parameters JSONB, -- Optional parameters for the tool
                 created_at TIMESTAMPTZ DEFAULT NOW()
             );
-        """)
+        """
+        )
 
-        await conn.execute("""
+        await conn.execute(
+            """
             CREATE TABLE task_tools (
                 task_id INT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
                 tool_id INT NOT NULL REFERENCES tools(id) ON DELETE CASCADE,
                 PRIMARY KEY (task_id, tool_id)
             );
-        """)
+        """
+        )
 
-        await conn.execute("""
+        await conn.execute(
+            """
             CREATE TABLE api_keys (
                 id SERIAL PRIMARY KEY,
                 uuid UUID DEFAULT gen_random_uuid(), 
@@ -175,7 +196,8 @@ async def init_db():
                 expires_at TIMESTAMPTZ, -- Optional expiration date
                 active BOOLEAN DEFAULT TRUE -- Whether the key is currently active
             );
-        """)
+        """
+        )
 
         await conn.execute("CREATE INDEX ON tasks (project_id);")
         await conn.execute("CREATE INDEX ON task_embeddings (task_id);")
@@ -191,7 +213,9 @@ async def init_db():
         await conn.execute("CREATE INDEX ON projects (name);")
         await conn.execute("CREATE INDEX ON users (username);")
         await conn.execute("CREATE INDEX ON tools (name);")
-        await conn.execute("CREATE INDEX ON task_embeddings USING hnsw (embedding vector_l2_ops)")
+        await conn.execute(
+            "CREATE INDEX ON task_embeddings USING hnsw (embedding vector_l2_ops)"
+        )
 
         await conn.execute("CREATE INDEX ON tasks (uuid);")
         await conn.execute("CREATE INDEX ON projects (uuid);")
@@ -209,7 +233,9 @@ async def init_db():
             await conn.execute(
                 "INSERT INTO projects (uuid, name, description) VALUES ('36e8705e-6604-4e44-b58f-4e8c347a9f31', 'Test Project', 'A project for testing purposes');"
             )
-            await conn.execute("INSERT INTO user_projects (user_id, project_id) VALUES (1, 1);")
+            await conn.execute(
+                "INSERT INTO user_projects (user_id, project_id) VALUES (1, 1);"
+            )
 
             result = await conn.fetchrow(
                 "INSERT INTO tasks (uuid, project_id, name, input, state) VALUES ('123e4567-e89b-12d3-a456-426614174000', 1, 'Test Task', 'Write a blog post about the latest news stories', 'PENDING') RETURNING id;"
@@ -1754,14 +1780,17 @@ async def init_db():
                 -0.029299480840563774,
             ]
             await conn.execute(
-                "INSERT INTO task_embeddings (task_id, embedding) VALUES ($1, $2) RETURNING *", result["id"], embedding
+                "INSERT INTO task_embeddings (task_id, embedding) VALUES ($1, $2) RETURNING *",
+                result["id"],
+                embedding,
             )
 
             test_api_key = os.getenv("TEST_API_KEY", "TEST")
 
             hashed_api_key = hashpw(test_api_key.encode(), gensalt())
             await conn.execute(
-                "INSERT INTO api_keys (user_id, project_id, key) VALUES (1, 1, $1);", hashed_api_key.decode()
+                "INSERT INTO api_keys (user_id, project_id, key) VALUES (1, 1, $1);",
+                hashed_api_key.decode(),
             )
 
 

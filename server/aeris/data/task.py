@@ -38,21 +38,40 @@ async def update_task(
     name: str | None = None,
     input: str | None = None,
     state: str | None = None,
-    result: str | None = None,
+    success: bool | None = None,
+    feedback: str | None = None,
 ) -> Record | None:
     async with DB() as conn:
         task = await get_task_by_uuid(uuid, user_id)
         if not task:
             return None
 
-        return await conn.fetchrow(
-            "UPDATE tasks SET name = $1, input = $2, state = $3, result = $4 WHERE uuid = $5 RETURNING *",
-            name,
-            input,
-            state,
-            result,
-            uuid,
-        )
+        fields: list[str] = []
+        values: list[str | bool | UUID] = []
+
+        if name is not None:
+            fields.append("name = $1")
+            values.append(name)
+        if input is not None:
+            fields.append(f"input =  ${len(values) + 1}")
+            values.append(input)
+        if state is not None:
+            fields.append(f"state = ${len(values) + 1}")
+            values.append(state)
+        if success is not None:
+            fields.append(f"success = ${len(values) + 1}")
+            values.append(success)
+        if feedback is not None:
+            fields.append(f"feedback = ${len(values) + 1}")
+            values.append(feedback)
+
+        if not fields:
+            return task
+
+        query = f"UPDATE tasks SET {', '.join(fields)} WHERE id = ${len(values) + 1} RETURNING *"
+        values.append(task["id"])
+
+        return await conn.fetchrow(query, *values)
 
 
 async def delete_task(uuid: UUID, user_id: int) -> Record | None:
