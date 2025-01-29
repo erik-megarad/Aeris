@@ -1,3 +1,4 @@
+import json
 from uuid import UUID
 
 from asyncpg import Record
@@ -15,7 +16,9 @@ async def get_task_by_uuid(uuid: UUID, user_id: int) -> Record:
         )
 
 
-async def create_task(project_id: UUID, user_id: int, name: str, input: str) -> Record | None:
+async def create_task(
+    project_id: UUID, user_id: int, name: str, input: str
+) -> Record | None:
     async with DB() as conn:
         project = await get_project_by_uuid(project_id, user_id)
         if not project:
@@ -77,21 +80,25 @@ async def create_event(task_id: int, event_type: str, event_data: dict) -> Recor
     """
     query = """
     INSERT INTO events (task_id, event_type, event_data)
-    VALUES ($1, $2, $3, $4)
-    RETURNING id, task_id, event_type, event_data
+    VALUES ($1, $2, $3)
+    RETURNING id, task_id, event_type, event_data, created_at
     """
     async with DB() as conn:
-        return await conn.fetchrow(query, task_id, event_type, event_data)
+        return await conn.fetchrow(query, task_id, event_type, json.dumps(event_data))
 
 
 async def get_embeddings_for_task(task_id: int) -> list[Record]:
     async with DB() as conn:
-        return await conn.fetch("SELECT * FROM task_embeddings WHERE task_id = $1", task_id)
+        return await conn.fetch(
+            "SELECT * FROM task_embeddings WHERE task_id = $1", task_id
+        )
 
 
 async def get_metadata_for_task(task_id: int) -> Record:
     async with DB() as conn:
-        return await conn.fetchrow("SELECT * FROM task_metadata WHERE task_id = $1", task_id)
+        return await conn.fetchrow(
+            "SELECT * FROM task_metadata WHERE task_id = $1", task_id
+        )
 
 
 async def find_similar_tasks(embedding: list[float]) -> list[Record]:

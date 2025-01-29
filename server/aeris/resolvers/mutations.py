@@ -3,7 +3,14 @@ import logging
 from ariadne import MutationType
 
 from aeris.data.project import create_project, delete_project, update_project
-from aeris.data.task import create_event, create_task, create_task_embedding, delete_task, get_task_by_uuid, update_task
+from aeris.data.task import (
+    create_event,
+    create_task,
+    create_task_embedding,
+    delete_task,
+    get_task_by_uuid,
+    update_task,
+)
 from aeris.decorators import decorate_event, decorate_project, decorate_task
 from aeris.embeddings import generate_openai_embedding
 
@@ -46,7 +53,9 @@ async def resolve_create_task(_, info, projectId, name, input):
 
 
 @mutation.field("updateTask")
-async def resolve_update_task(_, info, id, name=None, input=None, state=None, result=None):
+async def resolve_update_task(
+    _, info, id, name=None, input=None, state=None, result=None
+):
     user_id = info.context["user_id"]
     return decorate_task(await update_task(id, user_id, name, input, state, result))
 
@@ -68,7 +77,7 @@ async def resolve_log_event(_, info, taskId, eventType, eventData):
 
     # Create the event
     logger.info(f"Logging event: {eventType} - {eventData}")
-    event = await create_event(taskId, eventType, eventData)
+    event = await create_event(task["id"], eventType, eventData)
 
     # Decorate the event for GraphQL
     return decorate_event(event)

@@ -2,10 +2,8 @@
 name = "aeris-llamaindex"
 version = "0.1.0"
 description = ""
-authors = [
-    {name = "Erik Peterson",email = "e@eriklp.com"}
-]
-license = {text = "MIT"}
+authors = [{ name = "Erik Peterson", email = "e@eriklp.com" }]
+license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.10,<4"
 dependencies = [
@@ -16,8 +14,10 @@ dependencies = [
     "tavily-python (>=0.5.0,<0.6.0)",
     "python-dotenv (>=1.0.1,<2.0.0)",
     "pyowm (>=3.3.0,<4.0.0)",
+    "gql (>=3.5.0,<4.0.0)",
 ]
 
+packages = [{ include = "aeris_llamaindex" }]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -27,4 +27,3 @@ build-backend = "poetry.core.masonry.api"
 ruff = "^0.9.3"
 mypy = "^1.14.1"
 types-pytz = "^2024.2.0.20241221"
-
