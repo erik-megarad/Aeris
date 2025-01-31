@@ -25,7 +25,7 @@ type Task {
   id: ID!
   name: String!
   input: String!
-  result: String
+  feedback: String
   success: Boolean
   state: TaskState!
   createdAt: String!

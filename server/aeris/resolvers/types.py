@@ -3,7 +3,13 @@ import json
 from ariadne import ObjectType, ScalarType
 
 from aeris.data.project import get_tasks_for_project
-from aeris.data.task import get_embeddings_for_task, get_metadata_for_task, get_task_by_uuid
+from aeris.data.task import (
+    get_embeddings_for_task,
+    get_events_for_task,
+    get_metadata_for_task,
+    get_task_by_uuid,
+)
+from aeris.decorators import decorate_event
 
 project = ObjectType("Project")
 task = ObjectType("Task")
@@ -23,7 +29,11 @@ async def resolve_task_embeddings(obj, info):
     task_record = await get_task_by_uuid(obj["id"], user_id)
     result = await get_embeddings_for_task(task_record["id"])
     decorated = [
-        {"id": embedding["id"], "task_id": task_record["id"], "embedding": embedding["embedding"].tolist()}
+        {
+            "id": embedding["id"],
+            "task_id": task_record["id"],
+            "embedding": embedding["embedding"].tolist(),
+        }
         for embedding in result
     ]
     return decorated
@@ -34,6 +44,21 @@ async def resolve_task_metadata(obj, info):
     user_id = info.context["user_id"]
     task_record = await get_task_by_uuid(obj["id"], user_id)
     return await get_metadata_for_task(task_record["id"])
+
+
+@task.field("events")
+async def resolve_events(obj, info):
+    user_id = info.context["user_id"]
+    # Perform auth via fetching the task
+    task_record = await get_task_by_uuid(obj["id"], user_id)
+    events = [
+        decorate_event(event) for event in await get_events_for_task(task_record["id"])
+    ]
+    edges = [{"cursor": event["id"], "node": event} for event in events]
+    return {
+        "edges": edges,
+        "pageInfo": {"hasNextPage": False, "hasPreviousPage": False},
+    }
 
 
 # Define the JSON scalar

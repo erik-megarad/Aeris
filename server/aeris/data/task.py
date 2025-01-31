@@ -134,3 +134,11 @@ async def find_similar_tasks(embedding: list[float]) -> list[Record]:
             """,
             embedding,
         )
+
+
+async def get_events_for_task(task_id: int) -> list[Record]:
+    async with DB() as conn:
+        return await conn.fetch(
+            "SELECT * FROM events WHERE task_id = $1 ORDER BY created_at",
+            task_id,
+        )

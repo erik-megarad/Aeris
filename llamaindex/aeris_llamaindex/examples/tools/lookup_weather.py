@@ -4,17 +4,21 @@ from datetime import datetime, tzinfo
 import httpx
 import pytz  # type: ignore
 from dotenv import load_dotenv
+from llama_index.core.tools import FunctionTool
 from llama_index.core.workflow import Context
 
 load_dotenv()
 
 
-async def guess_unit_of_measurement(ctx: Context, unit: str) -> str:
+async def guess_unit_of_measurement_fn(ctx: Context, unit: str) -> str:
     """Useful for guessing the unit of measurement based on the given location information. Your input should be one of "metric" or "imperial"."""
     current_state = await ctx.get("state")
     current_state["unit"] = unit
     await ctx.set("state", current_state)
     return f"Unit of measurement guessed as {unit}."
+
+
+guess_unit_of_measurement = FunctionTool.from_defaults(guess_unit_of_measurement_fn)
 
 
 def format_weather_datum(data: dict, unit: str, tz: tzinfo) -> str:
@@ -46,7 +50,7 @@ def format_weather_datum(data: dict, unit: str, tz: tzinfo) -> str:
 OWM_URI = "https://api.openweathermap.org/data/3.0/onecall"
 
 
-async def lookup_weather(ctx: Context, lat: float, lon: float, unit: str) -> str:
+async def lookup_weather_fn(ctx: Context, lat: float, lon: float, unit: str) -> str:
     """Useful for looking up the weather in a given location (latitude and longitude). Unit of measure (either imperial or metric) should be provided."""
 
     owm_api_key = os.getenv("OWM_API_KEY")
@@ -82,3 +86,6 @@ async def lookup_weather(ctx: Context, lat: float, lon: float, unit: str) -> str
     await ctx.set("state", current_state)
 
     return f"Weather forecast is ready.\n{forecast_string}"
+
+
+lookup_weather = FunctionTool.from_defaults(lookup_weather_fn)

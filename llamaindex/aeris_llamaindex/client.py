@@ -21,6 +21,7 @@ class AerisClient:
         api_key: Optional[str] = None,
         endpoint: Optional[str] = None,
         project_id: Optional[str] = None,
+        task_id: Optional[str] = None,
     ):
         """
         Initialize the Aeris GraphQL client.
@@ -29,6 +30,7 @@ class AerisClient:
             api_key (str): API key for authenticating requests.
             endpoint (str): The GraphQL API endpoint. Defaults to the production URL.
         """
+        self.task_id = task_id
         endpoint = endpoint or os.getenv("AERIS_API_ENDPOINT") or DEFAULT_ENDPOINT
 
         project_id = project_id or os.getenv("AERIS_PROJECT_ID")
@@ -88,6 +90,66 @@ class AerisClient:
         except Exception as e:
             raise RuntimeError(f"Error executing mutation: {str(e)}")
 
+    async def fetch_similar_tasks(
+        self, task_input: Optional[str] = None, embedding: Optional[list[float]] = None
+    ) -> list[str]:
+        """
+        Fetch similar tasks from Aeris.
+
+        Args:
+            task_input (Optional[str]): Text input to search for similar tasks.
+            embedding (Optional[List[float]]): Embedding to search for similar tasks.
+
+        Returns:
+            List[Dict[str, Any]]: A list of similar tasks with similarity scores.
+        """
+        if not task_input and not embedding:
+            raise ValueError("You must provide either 'task_input' or 'embedding'.")
+
+        query = """query FindSimilarTasks($input: String) {
+  findSimilarTasks(input: $input) {
+    similarity
+    task {
+      id
+      name
+      input
+      state
+      success
+      feedback
+      events {
+        edges {
+          node {
+            eventType
+            eventData
+          }
+        }
+      }
+    }
+  }
+}"""
+
+        variables = {"input": task_input}
+        response = await self.execute_query(query, variables)
+
+        similar_tasks = []
+        for similarity in response["findSimilarTasks"]:
+            task = similarity["task"]
+            task_summary = f"""# Similar Task: {task['name']}
+Task Input: {task['input']}
+State: {task['state']}
+Success: {task['success']}
+Human Feedback: {task['feedback']}
+
+"""
+            # for event in task["events"]["edges"]:
+            #    task_summary += (
+            #        f"  - {event['node']['eventType']}: {event['node']['eventData']}\n"
+            #    )
+
+            similar_tasks.append(task_summary)
+
+        return similar_tasks
+
     async def register_task(self, name: str, task_input: str) -> str:
         """
         Register a task with Aeris.
@@ -144,6 +206,7 @@ class AerisClient:
     async def log_llama_event(self, event: Event):
         """
         Log a LlamaIndex workflow event as an Aeris event
+
         Args:
             event (Event): The LlamaIndex workflow event to log.
         """
@@ -159,6 +222,10 @@ class AerisClient:
     async def end_task(self, success: bool, feedback: str) -> str:
         """
         End a task in Aeris. This is typically called when the task is complete or failed.
+
+        Args:
+            success (bool): Whether the task was successfully completed.
+            feedback (str): Human feedback on the task execution.
         """
 
         mutation = """

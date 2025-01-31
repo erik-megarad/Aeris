@@ -1,6 +1,7 @@
 import re
 
 from dotenv import load_dotenv
+from llama_index.core.tools import FunctionTool
 from llama_index.core.workflow import Context
 
 load_dotenv()
@@ -15,10 +16,13 @@ def extract_floats(input_string: str) -> list[float]:
     return [float(match) for match in matches]
 
 
-async def lookup_location(ctx: Context, latitude_and_longitude: str) -> str:
+async def lookup_location_fn(ctx: Context, latitude_and_longitude: str) -> str:
     """Useful for recording the latitude and longitude of a given location. Your input should be the latitude and longitude of the location."""
     current_state = await ctx.get("state")
     lat, lon = extract_floats(latitude_and_longitude)
     current_state["lat"] = lat
     current_state["lon"] = lon
     return f"Latitude ({lat}) and longitude ({lon}) written."
+
+
+lookup_location = FunctionTool.from_defaults(lookup_location_fn)

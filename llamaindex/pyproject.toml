@@ -15,6 +15,9 @@ dependencies = [
     "python-dotenv (>=1.0.1,<2.0.0)",
     "pyowm (>=3.3.0,<4.0.0)",
     "gql (>=3.5.0,<4.0.0)",
+    "llama-index-llms-replicate (>=0.4.0,<0.5.0)",
+    "replicate (>=1.0.4,<2.0.0)",
+    "colorama (>=0.4.6,<0.5.0)",
 ]
 
 packages = [{ include = "aeris_llamaindex" }]
